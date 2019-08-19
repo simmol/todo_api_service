@@ -2,31 +2,22 @@ from collections import OrderedDict
 
 from flask import session
 
+from project.tasks.exceptions import TaskNotFound
+from project.tasks.storage import Storage
+
 
 class TaskDTO(OrderedDict):
     pass
 
 
-class TaskNotFound(Exception):
-    pass
-
-
 class Task(object):
+    storage = Storage()
 
     @classmethod
     def create_task(cls, label):
-        new_id = max(session.get('last_task', 0), 1)
-        task = TaskDTO(id=new_id, label=label, completed=False)
-        cls.add_task_to_the_list_of_tasks(task)
-
-        session['last_task'] = new_id + 1
+        task = TaskDTO(id=cls.storage.get_new_id(), label=label, completed=False)
+        cls.storage.save_task(task)
         return task
-
-    @classmethod
-    def add_task_to_the_list_of_tasks(cls, task):
-        tasks = session.get('tasks', {})
-        tasks[str(task['id'])] = task
-        session['tasks'] = tasks
 
     @classmethod
     def get_task_by_id(cls, uid):
@@ -38,23 +29,21 @@ class Task(object):
 
     @classmethod
     def get_all(cls):
-        return list(session.get('tasks', {}).values())
+        return list(cls.storage.get_all().values())
 
     @classmethod
-    def update_task(cls, uid, json):
+    def update_task(cls, uid, label=None, completed=None):
 
         task = cls.get_task_by_id(uid)
-        task['label'] = json.get('label', task['label'])
-        task['completed'] = json.get('completed', task['completed'])
+        task['label'] = label or task['label']
+        task['completed'] = completed or task['completed']
 
-        cls.add_task_to_the_list_of_tasks(task)
+        cls.storage.update(task)
         return task
 
     @classmethod
     def delete_task(cls, uid):
         try:
-            tasks = session.get('tasks', {})
-            del tasks[str(uid)]
-            session['tasks'] = tasks
+            cls.storage.delete(uid)
         except KeyError:
             raise TaskNotFound(f"Task does not exist with id: {uid}")
