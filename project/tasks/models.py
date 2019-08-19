@@ -14,8 +14,11 @@ class Task(object):
     storage = Storage()
 
     @classmethod
-    def create_task(cls, label):
-        task = TaskDTO(id=cls.storage.get_new_id(), label=label, completed=False)
+    def create_task(cls, label, parent_task_uid=None):
+        if parent_task_uid:
+            cls.get_task_by_id(parent_task_uid)
+
+        task = TaskDTO(id=cls.storage.get_new_id(), label=label, completed=False, parent_task=parent_task_uid)
         cls.storage.save_task(task)
         return task
 
@@ -47,3 +50,7 @@ class Task(object):
             cls.storage.delete(uid)
         except KeyError:
             raise TaskNotFound(f"Task does not exist with id: {uid}")
+
+    @classmethod
+    def get_all_sub_tasks_of_task(cls, uid):
+        return cls.storage.get_sub_tasks_by_parent_task(uid)

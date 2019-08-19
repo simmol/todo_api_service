@@ -23,10 +23,10 @@ def test_add_task(test_client):
         response = test_client.post('/tasks', json={'label': "task"})
         assert response.status_code == 201
 
-        assert b'{"task": {"id": 1, "label": "task", "completed": false}}' == response.data
+        assert b'{"task": {"id": 1, "label": "task", "completed": false, "parent_task": null}}' == response.data
 
         test_client.get('/tasks')
-        assert b'{"task": {"id": 1, "label": "task", "completed": false}}' in response.data
+        assert b'{"task": {"id": 1, "label": "task", "completed": false, "parent_task": null}}' in response.data
 
 
 def test_add_two_tasks_have_different_ids_and_show_in_tasks(test_client):
@@ -34,14 +34,14 @@ def test_add_two_tasks_have_different_ids_and_show_in_tasks(test_client):
         sass.clear()
         response = test_client.post('/tasks', json={'label': "task"})
         assert response.status_code == 201
-        assert b'{"task": {"id": 1, "label": "task", "completed": false}}' == response.data
+        assert b'{"task": {"id": 1, "label": "task", "completed": false, "parent_task": null}}' == response.data
 
         response2 = test_client.post('/tasks', json={'label': "task_two"})
         assert response2.status_code == 201
-        assert b'{"task": {"id": 2, "label": "task_two", "completed": false}}' == response2.data
+        assert b'{"task": {"id": 2, "label": "task_two", "completed": false, "parent_task": null}}' == response2.data
 
         response_tasks = test_client.get('/tasks')
-        assert b'[{"completed": false, "id": 1, "label": "task"}, {"completed": false, "id": 2, "label": "task_two"}]' == response_tasks.data
+        assert b'[{"completed": false, "id": 1, "label": "task", "parent_task": null}, {"completed": false, "id": 2, "label": "task_two", "parent_task": null}]' == response_tasks.data
 
 
 def test_update_task_work_when_given_label_and_completed(test_client):
@@ -59,10 +59,10 @@ def test_update_task_work_when_given_label_and_completed(test_client):
         # Update Task 2
         update_response = test_client.post('/tasks/2', json={'label': "task_two_v2", 'completed': True})
         assert update_response.status_code == 201
-        assert b'{"task": {"completed": true, "id": 2, "label": "task_two_v2"}}' == update_response.data
+        assert b'{"task": {"completed": true, "id": 2, "label": "task_two_v2", "parent_task": null}}' == update_response.data
 
         response_tasks = test_client.get('/tasks')
-        assert b'[{"completed": false, "id": 1, "label": "task"}, {"completed": true, "id": 2, "label": "task_two_v2"}]' == response_tasks.data
+        assert b'[{"completed": false, "id": 1, "label": "task", "parent_task": null}, {"completed": true, "id": 2, "label": "task_two_v2", "parent_task": null}]' == response_tasks.data
 
 
 def test_update_task_work_when_given_label_only(test_client):
@@ -80,10 +80,10 @@ def test_update_task_work_when_given_label_only(test_client):
         # Update Task 2
         update_response = test_client.post('/tasks/2', json={'label': "task_two_v2"})
         assert update_response.status_code == 201
-        assert b'{"task": {"completed": false, "id": 2, "label": "task_two_v2"}}' == update_response.data
+        assert b'{"task": {"completed": false, "id": 2, "label": "task_two_v2", "parent_task": null}}' == update_response.data
 
         response_tasks = test_client.get('/tasks')
-        assert b'[{"completed": false, "id": 1, "label": "task"}, {"completed": false, "id": 2, "label": "task_two_v2"}]' == response_tasks.data
+        assert b'[{"completed": false, "id": 1, "label": "task", "parent_task": null}, {"completed": false, "id": 2, "label": "task_two_v2", "parent_task": null}]' == response_tasks.data
 
 
 def test_update_task_work_when_given_completed_only(test_client):
@@ -101,10 +101,10 @@ def test_update_task_work_when_given_completed_only(test_client):
         # Update Task 2
         update_response = test_client.post('/tasks/2', json={'completed': True})
         assert update_response.status_code == 201
-        assert b'{"task": {"completed": true, "id": 2, "label": "task_two"}}' == update_response.data
+        assert b'{"task": {"completed": true, "id": 2, "label": "task_two", "parent_task": null}}' == update_response.data
 
         response_tasks = test_client.get('/tasks')
-        assert b'[{"completed": false, "id": 1, "label": "task"}, {"completed": true, "id": 2, "label": "task_two"}]' == response_tasks.data
+        assert b'[{"completed": false, "id": 1, "label": "task", "parent_task": null}, {"completed": true, "id": 2, "label": "task_two", "parent_task": null}]' == response_tasks.data
 
 
 def test_update_task_return_404_and_error_msg_when_trying_to_update_not_existing_task(test_client):
@@ -142,7 +142,7 @@ def test_delete_task(test_client):
 
         # Test that only task two is in the list
         response_tasks = test_client.get('/tasks')
-        assert b'[{"completed": false, "id": 2, "label": "task_two"}]' == response_tasks.data
+        assert b'[{"completed": false, "id": 2, "label": "task_two", "parent_task": null}]' == response_tasks.data
 
 
 def test_delete_task_return_404_and_error_msg_when_trying_to_delete_not_existing_task(test_client):

@@ -25,17 +25,22 @@ def list_tasks():
     return Response(json.dumps(tasks), status=200, mimetype='application/json')
 
 
+@tasks_blueprint.route('/tasks/<int:uid>', methods=['GET'])
+def list_sub_tasks(uid):
+    sub_tasks = Task.get_all_sub_tasks_of_task(uid)
+    return Response(json.dumps(sub_tasks), status=200, mimetype='application/json')
+
+
 @tasks_blueprint.route('/tasks', methods=['POST'])
 def add_tasks():
     try:
-        task = Task().create_task(request.json['label'])
+        task = Task().create_task(request.json['label'], parent_task_uid=request.json.get('parent_task'))
     except KeyError:
         return Response(json.dumps({'error': BAD_REQUEST_MSG}), status=400)
-    output = {
-        'task': task
-    }
+    except TaskNotFound as ex:
+        return Response(json.dumps({'error': str(ex)}), status=404, mimetype='application/json')
 
-    return Response(json.dumps(output), status=201, mimetype='application/json')
+    return Response(json.dumps({'task': task}), status=201, mimetype='application/json')
 
 
 @tasks_blueprint.route('/tasks/<int:uid>', methods=['POST'])
