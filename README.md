@@ -1,6 +1,15 @@
-# Simple TODO API
+# Simple TODO APP API
 
 The API is implemented using Flask( version 1.1.1)
+
+## Installing requirements
+All requirements are in requirements.txt
+
+Doing:
+```
+pip install -r requirements.txt
+```
+Will install all needed packages
 
 ## Running the app
 The app is very basic Flask app, so it is very easy to run
